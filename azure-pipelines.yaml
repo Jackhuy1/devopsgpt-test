@@ -5,10 +5,10 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  containerRegistry: mycontainerregistry.azurecr.io
-  resourceGroup: my-resource-group
-  aksCluster: my-aks-cluster
-  azureSubscription: my-azure-subscription
+  containerRegistry: terratamldacr.azurecr.io
+  resourceGroup: terraform-aks
+  aksCluster: terra-aks
+  azureSubscription: azure-service-connection
 
 steps:
 - task: UsePythonVersion@1
