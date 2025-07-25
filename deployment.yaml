@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-game-deployment
+  labels:
+    app: snake-game
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snake-game
+  template:
+    metadata:
+      labels:
+        app: snake-game
+    spec:
+      containers:
+      - name: snake-game-container
+        image: my-docker-registry.com/snake-game:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "500m"
+          limits:
+            memory: "256Mi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 10
