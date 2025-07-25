@@ -1,0 +1,52 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  containerRegistry: mycontainerregistry.azurecr.io
+  resourceGroup: my-resource-group
+  aksCluster: my-aks-cluster
+  azureSubscription: my-azure-subscription
+
+steps:
+- task: UsePythonVersion@1
+  inputs:
+    versionSpec: '3.x'
+    addToPath: true
+
+- script: |
+    pip install pygame
+  displayName: 'Install dependencies'
+
+- script: |
+    docker build -t $(containerRegistry)/snake-game:latest .
+  displayName: 'Build Docker image'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az acr login --name $(containerRegistry)
+  displayName: 'Authenticate with Azure Container Registry'
+
+- script: |
+    docker push $(containerRegistry)/snake-game:latest
+  displayName: 'Push Docker image to Azure Container Registry'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az aks get-credentials --resource-group $(resourceGroup) --name $(aksCluster)
+  displayName: 'Set Kubernetes context'
+
+- script: |
+    kubectl apply -f deployment.yaml
+    kubectl apply -f service.yaml
+  displayName: 'Deploy to AKS'
