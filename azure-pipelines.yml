@@ -20,7 +20,7 @@ steps:
 - task: Docker@2
   inputs:
     command: 'buildAndPush'
-    repository: 'myacrname.azurecr.io/snake-game'
+    repository: 'terratamldacr.azurecr.io/snake-game'
     dockerfile: 'Dockerfile'
     containerRegistry: 'acr-connection'
     tags: |
