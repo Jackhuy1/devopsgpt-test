@@ -8,13 +8,20 @@ pool:
 
 variables:
   registry: 'myregistry.azurecr.io'
-  acrUsername: 'realAcrUsername'
-  acrPassword: 'realAcrPassword'
-  acrEmail: 'realAcrEmail@example.com'
-  aksResourceGroup: 'myAksResourceGroup'
-  aksClusterName: 'myAksCluster'
   imageName: 'free_demo'
   imageTag: '$(Build.BuildId)'
+  aksResourceGroup: 'myAksResourceGroup'
+  aksClusterName: 'myAksCluster'
+  azureServiceConnection: 'myAzureServiceConnection'
+  - name: acrUsername
+    value: 'realAcrUsername'
+    isSecret: true
+  - name: acrPassword
+    value: 'realAcrPassword'
+    isSecret: true
+  - name: acrEmail
+    value: 'realAcrEmail@example.com'
+    isSecret: true
 
 steps:
 - task: Checkout@1
@@ -46,9 +53,14 @@ steps:
       --docker-email=$(acrEmail)
   displayName: 'Create Kubernetes Secret for ACR'
 
-- script: |
-    az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing
+- task: AzureCLI@2
   displayName: 'Get AKS Kubeconfig'
+  inputs:
+    azureSubscription: '$(azureServiceConnection)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing
 
 - script: |
     kubectl apply -f deployment.yaml
