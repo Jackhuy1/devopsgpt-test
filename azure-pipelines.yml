@@ -142,8 +142,8 @@ stages:
         command: apply
         useConfigurationFile: true
         configuration: |
-          deployment.yaml
-          service.yaml
+           /deployment.yaml
+           /service.yaml
 
     - task: Kubernetes@1
       displayName: Check deployment rollout status
