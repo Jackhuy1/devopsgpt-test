@@ -5,7 +5,12 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  imageName: 'terratamldacr.azurecr.io/snake-game'
+  imageName: 'myrealacr.azurecr.io/snake-game'
+  acrUsername: '$(ACR_USERNAME)'
+  acrPassword: '$(ACR_PASSWORD)'
+  acrServer: 'myrealacr.azurecr.io'
+  acrSecretName: 'acr-secret'
+  namespace: 'snake-game'
 
 steps:
 - task: UsePythonVersion@0
@@ -15,35 +20,65 @@ steps:
 - script: |
     python -m pip install --upgrade pip
     pip install -r requirements.txt
-  displayName: 'Install dependencies'
+    pytest
+  displayName: 'Install dependencies and run tests'
 
 - task: Docker@2
   inputs:
     command: 'buildAndPush'
-    repository: 'terratamldacr.azurecr.io/snake-game'
+    repository: 'snake-game'
     dockerfile: 'Dockerfile'
-    containerRegistry: 'acr-connection'
+    containerRegistry: 'MyRealACRServiceConnectionProd'
     tags: |
       $(Build.BuildId)
 
+- task: AzureCLI@2
+  displayName: 'Ensure Kubernetes namespace exists'
+  inputs:
+    azureSubscription: 'MyRealAzureSubscriptionProd'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az aks get-credentials --resource-group MyRealResourceGroupProd --name MyRealAKSClusterProd --overwrite-existing
+      kubectl get namespace $(namespace) || kubectl create namespace $(namespace)
+
 - task: Kubernetes@1
+  displayName: 'Create ACR docker-registry secret in AKS'
   inputs:
     connectionType: 'Azure Resource Manager'
-    azureSubscriptionEndpoint: 'azure-service-connection'
-    azureResourceGroup: 'terraform-aks'
-    kubernetesCluster: 'terra-aks'
-    namespace: 'default'
+    azureSubscription: 'MyRealAzureSubscriptionProd'
+    azureResourceGroup: 'MyRealResourceGroupProd'
+    kubernetesCluster: 'MyRealAKSClusterProd'
+    namespace: '$(namespace)'
+    command: 'createSecret'
+    secretType: 'dockerRegistry'
+    secretName: '$(acrSecretName)'
+    dockerRegistryEndpoint: '$(acrServer)'
+    dockerRegistryUsername: '$(acrUsername)'
+    dockerRegistryPassword: '$(acrPassword)'
+
+- task: Kubernetes@1
+  displayName: 'Apply Kubernetes deployment manifest'
+  inputs:
+    connectionType: 'Azure Resource Manager'
+    azureSubscription: 'MyRealAzureSubscriptionProd'
+    azureResourceGroup: 'MyRealResourceGroupProd'
+    kubernetesCluster: 'MyRealAKSClusterProd'
+    namespace: '$(namespace)'
     command: 'apply'
     useConfigurationFile: true
     configuration: 'k8s-deployment.yaml'
+    secretType: 'None'
 
 - task: Kubernetes@1
+  displayName: 'Apply Kubernetes service manifest'
   inputs:
     connectionType: 'Azure Resource Manager'
-    azureSubscriptionEndpoint: 'azure-service-connection'
-    azureResourceGroup: 'terraform-aks'
-    kubernetesCluster: 'terra-aks'
-    namespace: 'default'
+    azureSubscription: 'MyRealAzureSubscriptionProd'
+    azureResourceGroup: 'MyRealResourceGroupProd'
+    kubernetesCluster: 'MyRealAKSClusterProd'
+    namespace: '$(namespace)'
     command: 'apply'
     useConfigurationFile: true
     configuration: 'k8s-service.yaml'
+    secretType: 'None'
