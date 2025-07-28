@@ -29,23 +29,21 @@ steps:
 - task: Kubernetes@1
   inputs:
     connectionType: 'Azure Resource Manager'
-    azureSubscription: 'azure-service-connection'
+    azureSubscriptionEndpoint: 'azure-service-connection'
     azureResourceGroup: 'terraform-aks'
     kubernetesCluster: 'terra-aks'
     namespace: 'default'
     command: 'apply'
     useConfigurationFile: true
     configuration: 'k8s-deployment.yaml'
-    secretType: 'None'
 
 - task: Kubernetes@1
   inputs:
     connectionType: 'Azure Resource Manager'
-    azureSubscription: 'azure-service-connection'
+    azureSubscriptionEndpoint: 'azure-service-connection'
     azureResourceGroup: 'terraform-aks'
     kubernetesCluster: 'terra-aks'
     namespace: 'default'
     command: 'apply'
     useConfigurationFile: true
     configuration: 'k8s-service.yaml'
-    secretType: 'None'
