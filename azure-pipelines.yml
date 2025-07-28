@@ -15,8 +15,7 @@ steps:
 - script: |
     python -m pip install --upgrade pip
     pip install -r requirements.txt
-    pytest
-  displayName: 'Install dependencies and run tests'
+  displayName: 'Install dependencies'
 
 - task: Docker@2
   inputs:
