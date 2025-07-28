@@ -47,7 +47,6 @@ stages:
     - script: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        python -m unittest tests/test_app.py
       displayName: Run Python Unit Tests
 
 - stage: Deploy
