@@ -11,18 +11,31 @@ variables:
   acrUsername: 'realAcrUsername'
   acrPassword: 'realAcrPassword'
   acrEmail: 'realAcrEmail@example.com'
+  aksResourceGroup: 'myAksResourceGroup'
+  aksClusterName: 'myAksCluster'
+  imageName: 'free_demo'
+  imageTag: '$(Build.BuildId)'
 
 steps:
 - task: Checkout@1
   displayName: 'Checkout repository code'
 
-- script: |
-    docker build -t $(registry)/free_demo:$(Build.BuildId) .
+- task: Docker@2
   displayName: 'Build Docker Image'
+  inputs:
+    containerRegistry: '$(registry)'
+    repository: '$(imageName)'
+    command: 'build'
+    Dockerfile: 'Dockerfile'
+    tags: '$(imageTag)'
 
-- script: |
-    docker push $(registry)/free_demo:$(Build.BuildId)
+- task: Docker@2
   displayName: 'Push Docker Image to Registry'
+  inputs:
+    containerRegistry: '$(registry)'
+    repository: '$(imageName)'
+    command: 'push'
+    tags: '$(imageTag)'
 
 - script: |
     kubectl delete secret acr-secret --ignore-not-found
@@ -34,8 +47,11 @@ steps:
   displayName: 'Create Kubernetes Secret for ACR'
 
 - script: |
+    az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing
+  displayName: 'Get AKS Kubeconfig'
+
+- script: |
     kubectl apply -f deployment.yaml
     kubectl apply -f service.yaml
-    # Uncomment the line below if ingress is required
-    # kubectl apply -f ingress.yaml
+    kubectl apply -f ingress.yaml
   displayName: 'Deploy to Azure Kubernetes Service'
