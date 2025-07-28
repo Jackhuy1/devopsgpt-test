@@ -6,10 +6,10 @@ pool:
 
 variables:
   imageName: snake-game
-  containerRegistry: myregistry.azurecr.io
-  dockerRegistryServiceConnection: myDockerRegistryServiceConnection
-  azureResourceManagerServiceConnection: myAzureRMServiceConnection
-  kubernetesServiceConnection: myKubernetesServiceConnection
+  containerRegistry: terratamldacr.azurecr.io
+  dockerRegistryServiceConnection: acr-connection
+  azureResourceManagerServiceConnection: azure-service-connection
+  kubernetesServiceConnection: aks-connection
   acrUsername: $(ACR_USERNAME)       # Set these pipeline variables securely in Azure DevOps pipeline settings or via Key Vault
   acrPassword: $(ACR_PASSWORD)
 
@@ -43,7 +43,6 @@ steps:
         --docker-server=$(containerRegistry) \
         --docker-username=$(acrUsername) \
         --docker-password=$(acrPassword) \
-        --docker-email=example@example.com \
         -n default --dry-run=client -o yaml | kubectl apply -f -
   env:
     acrUsername: $(acrUsername)

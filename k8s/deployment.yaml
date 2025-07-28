@@ -16,7 +16,7 @@ spec:
       - name: acr-auth
       containers:
       - name: snake-game
-        image: myregistry.azurecr.io/snake-game:v1.0.0
+        image: terratamldacr.azurecr.io/snake-game
         ports:
         - containerPort: 5000
         resources:
