@@ -88,7 +88,7 @@ stages:
       displayName: Get AKS credentials
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: $(azureSubscription)
+        azureSubscriptionEndpoint: 'azure-service-connection'
         azureResourceGroup: $(resourceGroup)
         kubernetesCluster: $(aksCluster)
         namespace: default
@@ -97,7 +97,7 @@ stages:
     - task: AzureCLI@2
       displayName: Create Kubernetes secret for ACR authentication
       inputs:
-        azureSubscription: $(azureSubscription)
+        azureSubscriptionEndpoint: 'azure-service-connection'
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
@@ -135,7 +135,7 @@ stages:
       displayName: Deploy manifests to AKS
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: $(azureSubscription)
+        azureSubscriptionEndpoint: 'azure-service-connection'
         azureResourceGroup: $(resourceGroup)
         kubernetesCluster: $(aksCluster)
         namespace: default
@@ -149,7 +149,7 @@ stages:
       displayName: Check deployment rollout status
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: $(azureSubscription)
+        azureSubscriptionEndpoint: 'azure-service-connection'
         azureResourceGroup: $(resourceGroup)
         kubernetesCluster: $(aksCluster)
         namespace: default
