@@ -1,9 +1,9 @@
 import unittest
-from app import app
+from app import app as flask_app
 
 class FlaskAppTests(unittest.TestCase):
     def setUp(self):
-        self.app = app.test_client()
+        self.app = flask_app.test_client()
         self.app.testing = True
 
     def test_index_route(self):
