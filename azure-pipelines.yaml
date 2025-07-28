@@ -2,14 +2,14 @@ trigger:
 - main
 
 variables:
-  ACR_NAME: your-acr-name
+  ACR_NAME: terratamldacr
   IMAGE_NAME: snake-game
   K8S_NAMESPACE: default
-  AZURE_SUBSCRIPTION: your-azure-service-connection
-  AZURE_RESOURCE_GROUP: your-resource-group
-  AKS_CLUSTER_NAME: your-aks-cluster
-  ACR_SERVICE_CONNECTION: your-acr-service-connection
-  DOCKER_REGISTRY_SERVICE_CONNECTION: your-acr-service-connection
+  AZURE_SUBSCRIPTION: azure-service-connection
+  AZURE_RESOURCE_GROUP: terraform-aks
+  AKS_CLUSTER_NAME: terra-aks
+  ACR_SERVICE_CONNECTION: acr-connection
+  DOCKER_REGISTRY_SERVICE_CONNECTION: acr-connection
 
 stages:
 - stage: Build
@@ -18,7 +18,6 @@ stages:
   - job: Build
     pool:
       vmImage: 'ubuntu-latest'
-    container: python:3.9
     steps:
     - task: Docker@2
       displayName: Login to ACR
@@ -75,8 +74,14 @@ stages:
               secretType: 'dockerRegistry'
               containerRegistryType: 'Azure Container Registry'
               dockerRegistryEndpoint: '$(DOCKER_REGISTRY_SERVICE_CONNECTION)'
-          - script: |
-              kubectl set image deployment/$(IMAGE_NAME) $(IMAGE_NAME)-container=$(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(Build.BuildId) --namespace $(K8S_NAMESPACE)
+          - task: Kubernetes@1
             displayName: Update Deployment Image
-            env:
-              KUBECONFIG: $(KUBECONFIG)
+            inputs:
+              connectionType: 'Azure Resource Manager'
+              azureSubscriptionEndpoint: '$(AZURE_SUBSCRIPTION)'
+              azureResourceGroup: '$(AZURE_RESOURCE_GROUP)'
+              kubernetesCluster: '$(AKS_CLUSTER_NAME)'
+              command: 'set'
+              arguments: >
+                image deployment/$(IMAGE_NAME) $(IMAGE_NAME)-container=$(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(Build.BuildId)
+              namespace: '$(K8S_NAMESPACE)'
