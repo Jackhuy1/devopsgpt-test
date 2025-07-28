@@ -1,0 +1,65 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  registry: 'terratamldacr.azurecr.io'
+  imageName: 'nginx-demo'
+  imageTag: '$(Build.BuildId)'
+  aksResourceGroup: 'terraform-aks'
+  aksClusterName: 'mterra-aks'
+  azureServiceConnection: 'myAzureServiceConnection'
+  - name: acrUsername
+    value: 'terratamldacr'
+    isSecret: true
+  - name: acrPassword
+    value: 'UjX6YHnfTgsT1PIesxzi5IBW1lPjIvcUFwP9v02IM9'
+    isSecret: true
+
+steps:
+- task: Checkout@1
+  displayName: 'Checkout repository code'
+
+- task: Docker@2
+  displayName: 'Build Docker Image'
+  inputs:
+    containerRegistry: '$(registry)'
+    repository: '$(imageName)'
+    command: 'build'
+    Dockerfile: 'Dockerfile'
+    tags: '$(imageTag)'
+
+- task: Docker@2
+  displayName: 'Push Docker Image to Registry'
+  inputs:
+    containerRegistry: '$(registry)'
+    repository: '$(imageName)'
+    command: 'push'
+    tags: '$(imageTag)'
+
+- script: |
+    kubectl delete secret acr-secret --ignore-not-found
+    kubectl create secret docker-registry acr-secret \
+      --docker-server=$(registry) \
+      --docker-username=$(acrUsername) \
+      --docker-password=$(acrPassword) \
+  displayName: 'Create Kubernetes Secret for ACR'
+
+- task: AzureCLI@2
+  displayName: 'Get AKS Kubeconfig'
+  inputs:
+    azureSubscription: 'azure-service-connection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing
+
+- script: |
+    kubectl apply -f deployment.yaml
+    kubectl apply -f service.yaml
+    kubectl apply -f ingress.yaml
+  displayName: 'Deploy to Azure Kubernetes Service'
