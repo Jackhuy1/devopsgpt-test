@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: snake-game
-        image: ghcr.io/example/snake-game:1.0.0
+        image: terratamldacr.azurecr.io/snake-game
         ports:
         - containerPort: 8080
         readinessProbe:
