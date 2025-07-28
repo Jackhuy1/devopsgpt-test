@@ -9,13 +9,13 @@ variables:
   AZURE_RESOURCE_GROUP: terraform-aks
   AKS_CLUSTER_NAME: terra-aks
   ACR_SERVICE_CONNECTION: acr-connection
-  DOCKER_REGISTRY_SERVICE_CONNECTION: acr-connection
 
 stages:
 - stage: Build
   displayName: Build Docker Image
   jobs:
   - job: Build
+    container: python:3.9
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -34,21 +34,6 @@ stages:
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
         tags: '$(Build.BuildId)'
-
-- stage: Test
-  displayName: Run Unit Tests
-  dependsOn: Build
-  jobs:
-  - job: Test
-    pool:
-      vmImage: 'ubuntu-latest'
-    container: python:3.9
-    steps:
-    - script: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-      displayName: Run Python Unit Tests
-
 - stage: Deploy
   displayName: Deploy to AKS
   dependsOn: Test
@@ -62,27 +47,17 @@ stages:
       runOnce:
         deploy:
           steps:
-          - task: Kubernetes@1
-            displayName: Apply Kubernetes Manifests
+          - task: AzureCLI@2
+            displayName: 'Get AKS kubeconfig'
             inputs:
-              connectionType: 'Azure Resource Manager'
-              azureSubscriptionEndpoint: '$(AZURE_SUBSCRIPTION)'
-              azureResourceGroup: '$(AZURE_RESOURCE_GROUP)'
-              kubernetesCluster: '$(AKS_CLUSTER_NAME)'
-              command: 'apply'
-              useConfigurationFile: true
-              configuration: 'k8s/'
-              secretType: 'dockerRegistry'
-              containerRegistryType: 'Azure Container Registry'
-              dockerRegistryEndpoint: '$(DOCKER_REGISTRY_SERVICE_CONNECTION)'
-          - task: Kubernetes@1
-            displayName: Update Deployment Image
-            inputs:
-              connectionType: 'Azure Resource Manager'
-              azureSubscriptionEndpoint: '$(AZURE_SUBSCRIPTION)'
-              azureResourceGroup: '$(AZURE_RESOURCE_GROUP)'
-              kubernetesCluster: '$(AKS_CLUSTER_NAME)'
-              command: 'set'
-              arguments: >
-                image deployment/$(IMAGE_NAME) $(IMAGE_NAME)-container=$(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(Build.BuildId)
-              namespace: '$(K8S_NAMESPACE)'
+              azureSubscription: '$(AZURE_SUBSCRIPTION)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az aks get-credentials --resource-group $(AZURE_RESOURCE_GROUP) --name $(AKS_CLUSTER_NAME) --overwrite-existing
+          - script: |
+              kubectl apply -f k8s/
+            displayName: 'Apply Kubernetes Manifests'
+          - script: |
+              kubectl set image deployment/$(IMAGE_NAME) $(IMAGE_NAME)-container=$(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(Build.BuildId) -n $(K8S_NAMESPACE)
+            displayName: 'Update Deployment Image'
