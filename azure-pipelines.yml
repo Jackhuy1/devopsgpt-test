@@ -1,0 +1,41 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  registry: 'myregistry.azurecr.io'
+  acrUsername: 'realAcrUsername'
+  acrPassword: 'realAcrPassword'
+  acrEmail: 'realAcrEmail@example.com'
+
+steps:
+- task: Checkout@1
+  displayName: 'Checkout repository code'
+
+- script: |
+    docker build -t $(registry)/free_demo:$(Build.BuildId) .
+  displayName: 'Build Docker Image'
+
+- script: |
+    docker push $(registry)/free_demo:$(Build.BuildId)
+  displayName: 'Push Docker Image to Registry'
+
+- script: |
+    kubectl delete secret acr-secret --ignore-not-found
+    kubectl create secret docker-registry acr-secret \
+      --docker-server=$(registry) \
+      --docker-username=$(acrUsername) \
+      --docker-password=$(acrPassword) \
+      --docker-email=$(acrEmail)
+  displayName: 'Create Kubernetes Secret for ACR'
+
+- script: |
+    kubectl apply -f deployment.yaml
+    kubectl apply -f service.yaml
+    # Uncomment the line below if ingress is required
+    # kubectl apply -f ingress.yaml
+  displayName: 'Deploy to Azure Kubernetes Service'
