@@ -5,7 +5,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
-COPY . .
+COPY public ./public
+COPY src ./src
+COPY .env ./
+
 RUN npm run build
 
 FROM node:16-alpine
@@ -16,7 +19,6 @@ COPY package.json package-lock.json ./
 RUN npm install --production
 
 COPY --from=builder /app/build ./build
-COPY . .
 
 EXPOSE 5000
 
