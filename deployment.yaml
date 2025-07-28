@@ -16,7 +16,7 @@ spec:
       - name: azure-container-registry-secret
       containers:
       - name: nginx
-        image: myacr.azurecr.io/free_demo:latest
+        image: terratamldacr.azurecr.io/nginx-demo:latest
         ports:
         - containerPort: 80
         resources:

@@ -7,20 +7,17 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  registry: 'myregistry.azurecr.io'
-  imageName: 'free_demo'
+  registry: 'terratamldacr.azurecr.io'
+  imageName: 'nginx-demo'
   imageTag: '$(Build.BuildId)'
-  aksResourceGroup: 'myAksResourceGroup'
-  aksClusterName: 'myAksCluster'
+  aksResourceGroup: 'terraform-aks'
+  aksClusterName: 'mterra-aks'
   azureServiceConnection: 'myAzureServiceConnection'
   - name: acrUsername
-    value: 'realAcrUsername'
+    value: 'terratamldacr'
     isSecret: true
   - name: acrPassword
-    value: 'realAcrPassword'
-    isSecret: true
-  - name: acrEmail
-    value: 'realAcrEmail@example.com'
+    value: 'UjX6YHnfTgsT1PIesxzi5IBW1lPjIvcUFwP9v02IM9'
     isSecret: true
 
 steps:
@@ -50,13 +47,12 @@ steps:
       --docker-server=$(registry) \
       --docker-username=$(acrUsername) \
       --docker-password=$(acrPassword) \
-      --docker-email=$(acrEmail)
   displayName: 'Create Kubernetes Secret for ACR'
 
 - task: AzureCLI@2
   displayName: 'Get AKS Kubeconfig'
   inputs:
-    azureSubscription: '$(azureServiceConnection)'
+    azureSubscription: 'azure-service-connection'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
