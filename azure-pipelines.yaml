@@ -2,14 +2,14 @@ trigger:
 - main
 
 variables:
-  ACR_NAME: terratamldacr
+  ACR_NAME: your-acr-name
   IMAGE_NAME: snake-game
   K8S_NAMESPACE: default
-  AZURE_SUBSCRIPTION: azure-service-connection
-  AZURE_RESOURCE_GROUP: terraform-aks
-  AKS_CLUSTER_NAME: terra-aks
-  ACR_SERVICE_CONNECTION: acr-connection
-  DOCKER_REGISTRY_SERVICE_CONNECTION: acr-connection
+  AZURE_SUBSCRIPTION: your-azure-service-connection
+  AZURE_RESOURCE_GROUP: your-resource-group
+  AKS_CLUSTER_NAME: your-aks-cluster
+  ACR_SERVICE_CONNECTION: your-acr-service-connection
+  DOCKER_REGISTRY_SERVICE_CONNECTION: your-acr-service-connection
 
 stages:
 - stage: Build
