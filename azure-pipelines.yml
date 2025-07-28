@@ -5,7 +5,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  imageName: 'myacrname.azurecr.io/snake-game'
+  imageName: 'terratamldacr.azurecr.io/snake-game'
 
 steps:
 - task: UsePythonVersion@0
@@ -23,16 +23,16 @@ steps:
     command: 'buildAndPush'
     repository: 'myacrname.azurecr.io/snake-game'
     dockerfile: 'Dockerfile'
-    containerRegistry: 'MyACRServiceConnection'
+    containerRegistry: 'acr-connection'
     tags: |
       $(Build.BuildId)
 
 - task: Kubernetes@1
   inputs:
     connectionType: 'Azure Resource Manager'
-    azureSubscription: 'MyAzureSubscription'
-    azureResourceGroup: 'MyResourceGroup'
-    kubernetesCluster: 'MyAKSCluster'
+    azureSubscription: 'azure-service-connection'
+    azureResourceGroup: 'terraform-aks'
+    kubernetesCluster: 'terra-aks'
     namespace: 'default'
     command: 'apply'
     useConfigurationFile: true
@@ -42,9 +42,9 @@ steps:
 - task: Kubernetes@1
   inputs:
     connectionType: 'Azure Resource Manager'
-    azureSubscription: 'MyAzureSubscription'
-    azureResourceGroup: 'MyResourceGroup'
-    kubernetesCluster: 'MyAKSCluster'
+    azureSubscription: 'azure-service-connection'
+    azureResourceGroup: 'terraform-aks'
+    kubernetesCluster: 'terra-aks'
     namespace: 'default'
     command: 'apply'
     useConfigurationFile: true
