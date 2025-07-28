@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: myacr.azurecr.io/nginx-website:latest
+        image: terratamldacr.azurecr.io/nginx-website:latest
         ports:
         - containerPort: 80
         resources:
