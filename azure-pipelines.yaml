@@ -73,7 +73,7 @@ stages:
               inlineScript: |
                 az aks get-credentials --resource-group $(AZURE_RESOURCE_GROUP) --name $(AKS_CLUSTER_NAME) --overwrite-existing
           - script: |
-              kubectl apply -f k8s/
+              kubectl apply -f k8s/*
             displayName:  Apply Kubernetes Manifests 
           - script: |
               kubectl set image deployment/$(IMAGE_NAME) $(IMAGE_NAME)-container=$(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(Build.BuildId) -n $(K8S_NAMESPACE)
