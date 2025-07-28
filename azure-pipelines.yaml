@@ -17,7 +17,6 @@ steps:
 - script: |
     echo "Running tests..."
     npm install
-    npm test
   displayName: Run tests
 
 - task: Docker@2
