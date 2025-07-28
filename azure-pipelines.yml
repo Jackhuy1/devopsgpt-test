@@ -1,0 +1,52 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  imageName: 'myacrname.azurecr.io/snake-game'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+    pytest
+  displayName: 'Install dependencies and run tests'
+
+- task: Docker@2
+  inputs:
+    command: 'buildAndPush'
+    repository: 'myacrname.azurecr.io/snake-game'
+    dockerfile: 'Dockerfile'
+    containerRegistry: 'MyACRServiceConnection'
+    tags: |
+      $(Build.BuildId)
+
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Azure Resource Manager'
+    azureSubscription: 'MyAzureSubscription'
+    azureResourceGroup: 'MyResourceGroup'
+    kubernetesCluster: 'MyAKSCluster'
+    namespace: 'default'
+    command: 'apply'
+    useConfigurationFile: true
+    configuration: 'k8s-deployment.yaml'
+    secretType: 'None'
+
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Azure Resource Manager'
+    azureSubscription: 'MyAzureSubscription'
+    azureResourceGroup: 'MyResourceGroup'
+    kubernetesCluster: 'MyAKSCluster'
+    namespace: 'default'
+    command: 'apply'
+    useConfigurationFile: true
+    configuration: 'k8s-service.yaml'
+    secretType: 'None'
