@@ -18,7 +18,7 @@ spec:
         - name: regcred
       containers:
         - name: snake-game
-          image: prod-registry.example.com/snake-game:latest
+          image: terratamldacr.azurecr.io/snake-game
           ports:
             - containerPort: 5000
           readinessProbe:
