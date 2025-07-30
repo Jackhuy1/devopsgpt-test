@@ -1,0 +1,85 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  acrConnection: 'myacr-connection'
+  azureServiceConnection: 'my-azure-service-connection'
+  acrSecretName: 'acr-secret'
+  acrRegistry: 'myacr.azurecr.io'
+  acrUsername: 'myacrusername'
+  acrPassword: 'myacrpassword'
+  acrEmail: 'user@myemail.com'
+  AKSResourceGroup: 'ProdResourceGroup'
+  AKSCluster: 'ProdAKSCluster'
+  imageRepository: 'snake-game'
+  dockerfilePath: '**/Dockerfile'
+
+stages:
+  - stage: Build
+    displayName: "Build Docker Image and Push to ACR"
+    jobs:
+      - job: Build_Image
+        steps:
+          - checkout: self
+          
+          - task: Docker@2
+            displayName: 'Docker Registry Login'
+            inputs:
+              command: login
+              containerRegistry: '$(acrConnection)'
+
+          - task: Docker@2
+            displayName: 'Build and Push Image'
+            inputs:
+              containerRegistry: '$(acrConnection)'
+              repository: '$(imageRepository)'
+              command: 'buildAndPush'
+              Dockerfile: '$(dockerfilePath)'
+              tags: |
+                latest
+
+  - stage: Deploy
+    displayName: "Deploy to Azure Kubernetes Service (AKS)"
+    jobs:
+      - job: Deploy_To_AKS
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Azure Login'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Logged in to Azure Resource Manager"
+
+          - task: Bash@3
+            displayName: 'Create Kubernetes Secret for ACR'
+            inputs:
+              targetType: inline
+              script: |
+                kubectl create secret docker-registry $(acrSecretName) \
+                  --docker-server=$(acrRegistry) \
+                  --docker-username=$(acrUsername) \
+                  --docker-password=$(acrPassword) \
+                  --docker-email=$(acrEmail) \
+                  --namespace default || echo "Secret $(acrSecretName) already exists"
+
+          - task: AzureCLI@2
+            displayName: 'Get AKS kubeconfig'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az aks get-credentials --resource-group $(AKSResourceGroup) --name $(AKSCluster) --overwrite-existing
+
+          - task: Kubernetes@1
+            displayName: 'Deploy to AKS'
+            inputs:
+              connectionType: 'None'
+              namespace: 'default'
+              command: 'apply'
+              arguments: '-f kubernetes-deployment.yaml'
