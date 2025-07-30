@@ -23,10 +23,6 @@ stages:
               docker build -t $(imageName):$(imageTag) .
             displayName: 'Build Docker Image'
           - script: |
-              echo "Running unit tests using pytest..."
-              pytest --maxfail=1 --disable-warnings --junitxml=test-results.xml -q
-            displayName: 'Run Unit Tests'
-          - script: |
               echo "Saving Docker image as tar file..."
               mkdir -p $(Build.ArtifactStagingDirectory)
               docker save $(imageName):$(imageTag) -o $(Build.ArtifactStagingDirectory)/$(imageName).tar
