@@ -4,7 +4,7 @@ trigger:
       - main
 
 variables:
-  containerRegistry: myregistry.azurecr.io
+  containerRegistry: terratamldacr.azurecr.io
   imageName: snake-game
   imageTag: latest
   aksResourceGroup: terraform-aks
