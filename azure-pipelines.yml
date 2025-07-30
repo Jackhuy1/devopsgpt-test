@@ -1,0 +1,90 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  azureServiceConnection: 'azure-service-connection'
+  acrServiceConnection: 'acr-connection'
+  acrServer: '$(ACR_SERVER)'           # Provided as an Azure DevOps variable
+  imageRepository: 'snake-game'
+  imageTag: 'latest'
+  kubernetesNamespace: 'default'
+  deploymentFile: 'deployment.yaml'
+  aksResourceGroup: '$(AKS_RESOURCE_GROUP)'
+  aksCluster: '$(AKS_CLUSTER)'
+
+stages:
+  - stage: Build
+    displayName: "Build Stage"
+    jobs:
+      - job: BuildJob
+        displayName: "Build Python Application"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+              python -m flake8 .
+              python setup.py sdist bdist_wheel
+              echo "Python application build is complete."
+            displayName: "Install Dependencies, Lint, Build Package, and Confirm Build Completion"
+
+  - stage: Containerize
+    displayName: "Containerize Stage"
+    jobs:
+      - job: ContainerizeJob
+        displayName: "Build and Push Docker Image"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+          - task: AzureCLI@2
+            displayName: "Azure ARM Login"
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Logged into Azure Resource Manager"
+          - task: Docker@2
+            displayName: "Docker Registry Login"
+            inputs:
+              command: login
+              containerRegistry: '$(acrServiceConnection)'
+          - script: |
+              docker build -t $(acrServer)/$(imageRepository):$(imageTag) .
+            displayName: "Build Docker Image"
+          - script: |
+              docker push $(acrServer)/$(imageRepository):$(imageTag)
+            displayName: "Push Docker Image to Registry"
+
+  - stage: Deploy
+    displayName: "Deploy Stage"
+    jobs:
+      - job: DeployJob
+        displayName: "Deploy to AKS"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: AzureCLI@2
+            displayName: "Get AKS Credentials"
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksCluster) --overwrite-existing
+          - script: |
+              kubectl create secret docker-registry acr-secret \
+                --docker-server=$(acrServer) \
+                --docker-username=$(ACR_USERNAME) \
+                --docker-password=$(ACR_PASSWORD) \
+                --docker-email=$(ACR_EMAIL) \
+                --namespace $(kubernetesNamespace) || echo "Secret already exists"
+            displayName: "Create Image Pull Secret"
+          - script: |
+              kubectl apply -f $(deploymentFile)
+            displayName: "Deploy Application to AKS"
