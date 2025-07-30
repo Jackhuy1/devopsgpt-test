@@ -32,11 +32,6 @@ stages:
               targetPath: '$(Build.ArtifactStagingDirectory)/$(imageName).tar'
               artifact: 'dockerImage'
             displayName: 'Publish Docker Image Artifact'
-          - task: PublishTestResults@2
-            inputs:
-              testResultsFiles: 'test-results.xml'
-              testRunTitle: 'Snake Game Unit Tests'
-            displayName: 'Publish Test Results'
 
   - stage: Deploy
     dependsOn: Build
@@ -58,11 +53,6 @@ stages:
               echo "Logging into Docker registry..."
               docker login $(containerRegistry) -u $(registryUsername) -p $(registryPassword)
             displayName: 'Docker Login'
-          - script: |
-              echo "Tagging and pushing Docker image..."
-              docker tag $(imageName):$(imageTag) $(containerRegistry)/$(imageName):$(imageTag)
-              docker push $(containerRegistry)/$(imageName):$(imageTag)
-            displayName: 'Push Docker Image'
           - script: |
               echo "Creating Kubernetes secret for Docker registry credentials..."
               kubectl create secret docker-registry regcred \
