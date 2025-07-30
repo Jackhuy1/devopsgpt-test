@@ -12,6 +12,7 @@ variables:
   dockerEmail: example@example.com
   aksResourceGroup: my-aks-resource-group
   aksClusterName: my-aks-cluster
+  azureSubscription: my-azure-service-connection
 
 stages:
   - stage: Build
@@ -51,10 +52,15 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         steps:
-          - script: |
-              echo "Fetching Kubernetes configuration..."
-              az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName)
+          - task: AzureCLI@2
             displayName: 'Fetch AKS Kubeconfig'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Fetching Kubernetes configuration using service connection..."
+                az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName)
           - script: |
               echo "Logging into Docker registry..."
               docker login $(containerRegistry) -u $(registryUsername) -p $(registryPassword)
