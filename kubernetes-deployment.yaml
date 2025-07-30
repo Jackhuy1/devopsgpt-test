@@ -8,7 +8,6 @@ metadata:
     autoscaling.kubernetes.io/minReplicas: "1"
     autoscaling.kubernetes.io/maxReplicas: "3"
     autoscaling.kubernetes.io/targetCPUUtilizationPercentage: "80"
-    aks.kubernetes.io/network-policy: "calico"
 spec:
   replicas: 1
   selector:
@@ -23,7 +22,7 @@ spec:
       - name: acr-imagepullsecret
       containers:
       - name: snake-game
-        image: myacr.azurecr.io/snake-game:latest
+        image: terratamldacr.azurecr.io/snake-game-test
         resources:
           limits:
             cpu: "500m"
