@@ -7,8 +7,6 @@ variables:
   containerRegistry: terratamldacr.azurecr.io
   imageName: snake-game
   imageTag: latest
-  registryUsername: terratamldacr
-  registryPassword: UjX6YHnfTgsT1PIesxzi5IBW1lPjIvcUFwP9v02IM9+ACRDOKSL6
   aksResourceGroup: terraform-aks
   aksClusterName: terra-aks
   azureSubscription: azure-service-connection
