@@ -73,7 +73,6 @@ stages:
                 --docker-server=$(containerRegistry) \
                 --docker-username=$(registryUsername) \
                 --docker-password=$(registryPassword) \
-                --docker-email=$(dockerEmail) \
                 --dry-run=client -o yaml | kubectl apply -f -
             displayName: 'Create Kubernetes Secret'
           - script: |
