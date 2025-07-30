@@ -4,15 +4,14 @@ trigger:
       - main
 
 variables:
-  containerRegistry: myregistry.azurecr.io
+  containerRegistry: terratamldacr.azurecr.io
   imageName: snake-game
   imageTag: latest
-  registryUsername: myregistryusername
-  registryPassword: myregistrypassword
-  dockerEmail: example@example.com
-  aksResourceGroup: my-aks-resource-group
-  aksClusterName: my-aks-cluster
-  azureSubscription: my-azure-service-connection
+  registryUsername: terratamldacr
+  registryPassword: UjX6YHnfTgsT1PIesxzi5IBW1lPjIvcUFwP9v02IM9+ACRDOKSL6
+  aksResourceGroup: terraform-aks
+  aksClusterName: terra-aks
+  azureSubscription: azure-service-connection
 
 stages:
   - stage: Build
