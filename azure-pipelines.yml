@@ -7,18 +7,9 @@ variables:
   containerRegistry: myregistry.azurecr.io
   imageName: snake-game
   imageTag: latest
-<<<<<<< HEAD
-  registryUsername: myregistryusername
-  registryPassword: myregistrypassword
-  dockerEmail: example@example.com
-  aksResourceGroup: my-aks-resource-group
-  aksClusterName: my-aks-cluster
-  azureSubscription: my-azure-service-connection
-=======
   aksResourceGroup: terraform-aks
   aksClusterName: terra-aks
   azureSubscription: azure-service-connection
->>>>>>> 2e82940 (update azure pipeline 2)
 
 stages:
   - stage: Build
